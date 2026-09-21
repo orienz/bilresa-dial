@@ -1,0 +1,104 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose a BILRESA rotary remote",
+        "description": "Pair the remote with Home Assistant Matter first. Each entry controls one group.",
+        "data": {
+          "remote": "Remote",
+          "group": "Group"
+        }
+      },
+      "settings": {
+        "title": "Light controls",
+        "description": "Configure this remote group. Repeat Add integration to configure another group or remote.",
+        "data": {
+          "lights": "Lights or light groups",
+          "reverse_direction": "Reverse wheel direction",
+          "step_percent": "Brightness change per wheel step",
+          "minimum_percent": "Lowest scrolling brightness",
+          "maximum_percent": "Highest scrolling brightness",
+          "lit_only": "Only adjust lights already on",
+          "brighten_from_off": "Allow turning up to switch lights on",
+          "brightness_transition": "Brightness fade time",
+          "single_press": "Single press",
+          "double_press": "Double press",
+          "temperature_steps": "Temperature presets in kelvin, separated by commas",
+          "temperature_transition": "Temperature fade time"
+        },
+        "data_description": {
+          "lights": "Choose any HA light entities. Light groups are expanded into their members. Dimming needs dimmable lights; temperature cycling needs white-temperature support.",
+          "step_percent": "3% is close to 8/255 per wheel step.",
+          "lit_only": "Preserve bulbs that are off when some selected lights are already on.",
+          "brighten_from_off": "Start from a low brightness when all selected dimmable lights are off.",
+          "brightness_transition": "0 seconds gives the most direct scroll response.",
+          "temperature_steps": "Use 2\u201316 increasing values. Each light is limited to its supported range."
+        }
+      }
+    },
+    "error": {
+      "remote_missing": "The selected remote is no longer available in Matter.",
+      "group_missing": "The remote does not expose that group.",
+      "lights_required": "Select at least one light entity.",
+      "invalid_settings": "Check the selected settings and allowed number ranges.",
+      "brightness_range": "Minimum brightness must not exceed maximum brightness.",
+      "temperature_steps": "Enter 2\u201316 increasing whole-number temperatures from 1000 to 12000 K."
+    },
+    "abort": {
+      "no_remotes": "No paired BILRESA rotary remotes were found. Set up Home Assistant Matter, pair the remote, and wait for its endpoints to load.",
+      "already_configured": "This remote group already has a BILRESA Dial configuration."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Light controls",
+        "description": "Configure this remote group. Repeat Add integration to configure another group or remote.",
+        "data": {
+          "lights": "Lights or light groups",
+          "reverse_direction": "Reverse wheel direction",
+          "step_percent": "Brightness change per wheel step",
+          "minimum_percent": "Lowest scrolling brightness",
+          "maximum_percent": "Highest scrolling brightness",
+          "lit_only": "Only adjust lights already on",
+          "brighten_from_off": "Allow turning up to switch lights on",
+          "brightness_transition": "Brightness fade time",
+          "single_press": "Single press",
+          "double_press": "Double press",
+          "temperature_steps": "Temperature presets in kelvin, separated by commas",
+          "temperature_transition": "Temperature fade time"
+        },
+        "data_description": {
+          "lights": "Choose any HA light entities. Light groups are expanded into their members. Dimming needs dimmable lights; temperature cycling needs white-temperature support.",
+          "step_percent": "3% is close to 8/255 per wheel step.",
+          "lit_only": "Preserve bulbs that are off when some selected lights are already on.",
+          "brighten_from_off": "Start from a low brightness when all selected dimmable lights are off.",
+          "brightness_transition": "0 seconds gives the most direct scroll response.",
+          "temperature_steps": "Use 2\u201316 increasing values. Each light is limited to its supported range."
+        }
+      }
+    },
+    "error": {
+      "remote_missing": "The selected remote is no longer available in Matter.",
+      "group_missing": "The remote does not expose that group.",
+      "lights_required": "Select at least one light entity.",
+      "invalid_settings": "Check the selected settings and allowed number ranges.",
+      "brightness_range": "Minimum brightness must not exceed maximum brightness.",
+      "temperature_steps": "Enter 2\u201316 increasing whole-number temperatures from 1000 to 12000 K."
+    }
+  },
+  "selector": {
+    "single_press": {
+      "options": {
+        "toggle": "Toggle selected lights",
+        "none": "No action"
+      }
+    },
+    "double_press": {
+      "options": {
+        "temperature_cycle": "Cycle white temperature",
+        "none": "No action"
+      }
+    }
+  }
+}
