@@ -61,9 +61,7 @@ class ScrollDecoder:
         if kind not in (SwitchEvent.ONGOING, SwitchEvent.COMPLETE):
             return 0
         count = press_count(event, 255)
-        if count is None:
-            return 0
-        if count == 0:
+        if not count:
             if kind == SwitchEvent.COMPLETE:
                 self.counted_steps[endpoint] = 0
             return 0
@@ -109,12 +107,10 @@ class PressDecoder:
                 self.double_sent = True
                 return "multi_press_2"
         elif kind == SwitchEvent.COMPLETE:
-            count = press_count(event, 3)
-            if count is None:
-                return None
             already_sent = self.double_sent
             self.double_sent = False
             self.initials = 0
+            count = press_count(event, 3)
             if count in (1, 2) and not already_sent:
                 return f"multi_press_{count}"
         elif kind in (SwitchEvent.LONG_PRESS, SwitchEvent.LONG_RELEASE):

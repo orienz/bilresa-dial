@@ -81,6 +81,16 @@ def test_invalid_press_counters_do_not_toggle_or_break_next_press(bad):
     assert decoder.feed(event(2, 6, 1, endpoint=3)) == "multi_press_1"
 
 
+@pytest.mark.parametrize("bad", [None, True, 4, "1"])
+def test_unusable_completion_still_ends_the_press_gesture(bad):
+    decoder = PressDecoder(73)
+    assert decoder.feed(event(1, 1, endpoint=3)) is None
+    assert decoder.feed(event(2, 1, endpoint=3)) == "multi_press_2"
+    assert decoder.feed(event(3, 6, bad, endpoint=3)) is None
+    assert decoder.feed(event(4, 1, endpoint=3)) is None
+    assert decoder.feed(event(5, 6, 1, endpoint=3)) == "multi_press_1"
+
+
 @pytest.mark.parametrize("decoder,endpoint", [(ScrollDecoder, 1), (PressDecoder, 3)])
 def test_malformed_payload_is_ignored(decoder, endpoint):
     packet = event(1, 6, 2, endpoint=endpoint)
@@ -93,6 +103,15 @@ def test_zero_completion_starts_a_new_turn():
     assert decoder.feed(event(1, 1)) == 1
     assert decoder.feed(event(2, 6, 0)) == 0
     assert decoder.feed(event(3, 1)) == 1
+
+
+@pytest.mark.parametrize("bad", [None, True, 256, "8"])
+def test_unusable_completion_still_ends_the_turn(bad):
+    decoder = ScrollDecoder(73)
+    assert decoder.feed(event(1, 5, 7)) == 7
+    assert decoder.feed(event(2, 6, bad)) == 0
+    assert decoder.feed(event(3, 1)) == 1
+    assert decoder.feed(event(4, 5, 8)) == 7
 
 
 def test_recorded_turns():
