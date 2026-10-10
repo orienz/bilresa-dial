@@ -14,6 +14,8 @@ DEFAULTS = {
     "lit_only": True,
     "brighten_from_off": True,
     "brightness_transition": 0.0,
+    "temperature_follows_brightness": False,
+    "brightness_max_kelvin": 12000,
     "single_press": "toggle",
     "double_press": "temperature_cycle",
     "temperature_steps": "2202,2400,2700,3200,4500",
@@ -41,6 +43,7 @@ def validate_options(values: dict) -> dict:
         ("maximum_percent", 0.1, 100),
         ("brightness_transition", 0, 5),
         ("temperature_transition", 0, 10),
+        ("brightness_max_kelvin", 1000, 12000),
     ]:
         value = result[key]
         if (
@@ -52,10 +55,14 @@ def validate_options(values: dict) -> dict:
             raise ValueError("invalid_settings")
     if result["minimum_percent"] > result["maximum_percent"]:
         raise ValueError("brightness_range")
-    for key in ("reverse_direction", "lit_only", "brighten_from_off"):
+    for key in ("reverse_direction", "lit_only", "brighten_from_off", "temperature_follows_brightness"):
         if not isinstance(result[key], bool):
             raise ValueError("invalid_settings")
-    if result["single_press"] not in ("toggle", "none") or result["double_press"] not in ("temperature_cycle", "none"):
+    if result["single_press"] not in ("toggle", "none") or result["double_press"] not in (
+        "temperature_cycle",
+        "color_cycle",
+        "none",
+    ):
         raise ValueError("invalid_settings")
     try:
         steps = [int(x.strip()) for x in result["temperature_steps"].split(",")]
@@ -77,6 +84,8 @@ class Settings:
     lit_only: bool
     brighten_from_off: bool
     brightness_transition: float
+    temperature_follows_brightness: bool
+    brightness_max_kelvin: int
     single_press: str
     double_press: str
     temperature_steps: tuple[int, ...]
@@ -94,6 +103,8 @@ class Settings:
             lit_only=values["lit_only"],
             brighten_from_off=values["brighten_from_off"],
             brightness_transition=values["brightness_transition"],
+            temperature_follows_brightness=values["temperature_follows_brightness"],
+            brightness_max_kelvin=round(values["brightness_max_kelvin"]),
             single_press=values["single_press"],
             double_press=values["double_press"],
             temperature_steps=tuple(map(int, values["temperature_steps"].split(","))),

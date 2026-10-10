@@ -24,7 +24,9 @@
           "single_press": "Single press",
           "double_press": "Double press",
           "temperature_steps": "Temperature presets in kelvin, separated by commas",
-          "temperature_transition": "Temperature fade time"
+          "temperature_transition": "Temperature fade time",
+          "temperature_follows_brightness": "Adjust color warmth with brightness",
+          "brightness_max_kelvin": "Coolest white while dimming"
         },
         "data_description": {
           "lights": "Choose any HA light entities. Light groups are expanded into their members. Dimming needs dimmable lights; temperature cycling needs white-temperature support.",
@@ -32,7 +34,9 @@
           "lit_only": "Preserve bulbs that are off when some selected lights are already on.",
           "brighten_from_off": "Start from a low brightness when all selected dimmable lights are off.",
           "brightness_transition": "0 seconds gives the most direct scroll response.",
-          "temperature_steps": "Use 2\u201316 increasing values. Each light is limited to its supported range."
+          "temperature_steps": "Use 2–16 increasing values. Each light is limited to its supported range.",
+          "temperature_follows_brightness": "White follows brightness up to the chosen Kelvin limit. Selected colors keep their saturation and shift gently warmer when dimmed, cooler when brightened.",
+          "brightness_max_kelvin": "Limited to each bulb’s supported range. White-only bulbs beside colored lights use complementary white instead."
         }
       }
     },
@@ -42,7 +46,7 @@
       "lights_required": "Select at least one light entity.",
       "invalid_settings": "Check the selected settings and allowed number ranges.",
       "brightness_range": "Minimum brightness must not exceed maximum brightness.",
-      "temperature_steps": "Enter 2\u201316 increasing whole-number temperatures from 1000 to 12000 K."
+      "temperature_steps": "Enter 2–16 increasing whole-number temperatures from 1000 to 12000 K."
     },
     "abort": {
       "no_remotes": "No paired BILRESA rotary remotes were found. Set up Home Assistant Matter, pair the remote, and wait for its endpoints to load.",
@@ -66,7 +70,9 @@
           "single_press": "Single press",
           "double_press": "Double press",
           "temperature_steps": "Temperature presets in kelvin, separated by commas",
-          "temperature_transition": "Temperature fade time"
+          "temperature_transition": "Temperature fade time",
+          "temperature_follows_brightness": "Adjust color warmth with brightness",
+          "brightness_max_kelvin": "Coolest white while dimming"
         },
         "data_description": {
           "lights": "Choose any HA light entities. Light groups are expanded into their members. Dimming needs dimmable lights; temperature cycling needs white-temperature support.",
@@ -74,7 +80,9 @@
           "lit_only": "Preserve bulbs that are off when some selected lights are already on.",
           "brighten_from_off": "Start from a low brightness when all selected dimmable lights are off.",
           "brightness_transition": "0 seconds gives the most direct scroll response.",
-          "temperature_steps": "Use 2\u201316 increasing values. Each light is limited to its supported range."
+          "temperature_steps": "Use 2–16 increasing values. Each light is limited to its supported range.",
+          "temperature_follows_brightness": "White follows brightness up to the chosen Kelvin limit. Selected colors keep their saturation and shift gently warmer when dimmed, cooler when brightened.",
+          "brightness_max_kelvin": "Limited to each bulb’s supported range. White-only bulbs beside colored lights use complementary white instead."
         }
       }
     },
@@ -84,7 +92,7 @@
       "lights_required": "Select at least one light entity.",
       "invalid_settings": "Check the selected settings and allowed number ranges.",
       "brightness_range": "Minimum brightness must not exceed maximum brightness.",
-      "temperature_steps": "Enter 2\u201316 increasing whole-number temperatures from 1000 to 12000 K."
+      "temperature_steps": "Enter 2–16 increasing whole-number temperatures from 1000 to 12000 K."
     }
   },
   "selector": {
@@ -97,7 +105,8 @@
     "double_press": {
       "options": {
         "temperature_cycle": "Cycle white temperature",
-        "none": "No action"
+        "none": "No action",
+        "color_cycle": "Cycle eight colors and white"
       }
     }
   }

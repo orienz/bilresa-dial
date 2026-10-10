@@ -16,7 +16,7 @@ def settings_schema(defaults):
             selector.EntitySelectorConfig(domain="light", multiple=True)
         )
     }
-    for key in ("reverse_direction", "lit_only", "brighten_from_off"):
+    for key in ("reverse_direction", "lit_only", "brighten_from_off", "temperature_follows_brightness"):
         fields[vol.Required(key, default=values[key])] = selector.BooleanSelector()
     for key, minimum, maximum, step, unit in [
         ("step_percent", 0.1, 25, 0.1, "%"),
@@ -24,13 +24,17 @@ def settings_schema(defaults):
         ("maximum_percent", 0.1, 100, 0.1, "%"),
         ("brightness_transition", 0, 5, 0.1, "s"),
         ("temperature_transition", 0, 10, 0.1, "s"),
+        ("brightness_max_kelvin", 1000, 12000, 1, "K"),
     ]:
         fields[vol.Required(key, default=values[key])] = selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=minimum, max=maximum, step=step, unit_of_measurement=unit, mode=selector.NumberSelectorMode.BOX
             )
         )
-    for key, choices in [("single_press", ["toggle", "none"]), ("double_press", ["temperature_cycle", "none"])]:
+    for key, choices in [
+        ("single_press", ["toggle", "none"]),
+        ("double_press", ["temperature_cycle", "color_cycle", "none"]),
+    ]:
         fields[vol.Required(key, default=values[key])] = selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=choices, translation_key=key, mode=selector.SelectSelectorMode.DROPDOWN

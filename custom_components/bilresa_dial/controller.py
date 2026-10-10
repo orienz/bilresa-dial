@@ -2,9 +2,10 @@
 
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from time import monotonic
 
+from .colors import COLOR_MODES, PALETTE, matching_white, shift_hue
 from .const import DIMMABLE_MODES, REQUEST_MAX_AGE_SECONDS, TARGET_MEMORY_SECONDS, Settings
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +21,18 @@ class Light:
     minimum_kelvin: int = 2000
     maximum_kelvin: int = 6500
     transition_supported: bool = False
+
+    color_mode: str | None = None
+    hs: tuple[float, float] | None = None
+    white_only: bool = False
+
+    @property
+    def supports_color(self):
+        return not self.white_only and bool(self.modes & COLOR_MODES)
+
+    @property
+    def colored(self):
+        return self.supports_color and self.color_mode not in (None, "color_temp", "white") and self.hs is not None
 
     @property
     def available(self):
@@ -134,6 +147,7 @@ class Controller:
         self.owner = object()
         self.outputs.add_owner(self.owner)
         self.target = None
+        self.palette_index = -1
 
     def close(self):
         self.outputs.remove_owner(self.owner)
@@ -154,15 +168,81 @@ class Controller:
             )
         )
 
+    def _effective(self, light):
+        """Include our recent target while the bulb's state report catches up."""
+        command = self.outputs.latest.get(light.entity_id)
+        if (
+            command is None
+            or command.owner is not self.owner
+            or command.service != "turn_on"
+            or not 0 <= self.clock() - command.created < TARGET_MEMORY_SECONDS
+        ):
+            return light
+        data = command.data
+        changes = {}
+        if "brightness" in data:
+            changes["brightness"] = data["brightness"]
+        if "hs_color" in data:
+            changes.update(hs=tuple(data["hs_color"]), color_mode="hs", kelvin=None)
+        elif "color_temp_kelvin" in data:
+            changes.update(kelvin=data["color_temp_kelvin"], color_mode="color_temp")
+        return replace(light, **changes)
+
     def _submit(self, operation, lights, value=0):
+        lights = [self._effective(light) for light in lights]
+        # XY-only bulbs emulate the explicit white choice. Keep that choice
+        # while their reported color still looks like the warm white we sent.
+        lights = [
+            replace(light, color_mode="color_temp")
+            if (
+                self.palette_index == 3
+                and light.supports_color
+                and "color_temp" not in light.modes
+                and light.hs is not None
+                and 15 < light.hs[0] < 50
+                and light.hs[1] < 98
+            )
+            else light
+            for light in lights
+        ]
         self.outputs.discard_pending(self.owner)
         sequences = {}
+        mood = next((light.hs[0] for light in lights if light.colored), None)
         for light in lights:
             service, data = ("turn_off", {}) if operation == "off" else ("turn_on", {})
             transition = 0.0
             if operation == "brightness":
                 data["brightness"] = value
+                if light.colored:
+                    hue, saturation = light.hs
+                    if self.settings.temperature_follows_brightness:
+                        hue = shift_hue(hue, value - (light.brightness if light.brightness is not None else value))
+                    # Carry color into the newest pending command, including when
+                    # a double press has not reached the bulb yet.
+                    data["hs_color"] = [hue, saturation]
+                elif self.settings.temperature_follows_brightness and (
+                    ("color_temp" in light.modes and not light.supports_color) or light.color_mode == "color_temp"
+                ):
+                    fraction = max(0.0, min(1.0, (value - 3) / (255 - 3)))
+                    ceiling = (
+                        matching_white(mood)
+                        if mood is not None and not light.supports_color
+                        else self.settings.brightness_max_kelvin
+                    )
+                    ceiling = max(light.minimum_kelvin, min(light.maximum_kelvin, ceiling))
+                    data["color_temp_kelvin"] = round(
+                        light.minimum_kelvin + fraction * (ceiling - light.minimum_kelvin)
+                    )
+                elif light.color_mode == "color_temp" and light.kelvin and light.supports_color:
+                    data["color_temp_kelvin"] = light.kelvin
                 transition = self.settings.brightness_transition
+            elif operation == "palette":
+                _, hue, kelvin = PALETTE[value]
+                if light.supports_color and hue is not None:
+                    data["hs_color"] = [hue, 100]
+                else:
+                    data["color_temp_kelvin"] = max(light.minimum_kelvin, min(light.maximum_kelvin, kelvin))
+                transition = self.settings.temperature_transition
             elif operation == "temperature":
                 data["color_temp_kelvin"] = max(light.minimum_kelvin, min(light.maximum_kelvin, value))
                 transition = self.settings.temperature_transition
@@ -200,7 +280,10 @@ class Controller:
         value = max(
             self.settings.minimum, min(self.settings.maximum, base + (steps if up else -steps) * self.settings.step)
         )
-        if value != base:
+        if value != base or (
+            self.settings.temperature_follows_brightness
+            and not self._fresh("brightness", [light.entity_id for light in selected])
+        ):
             self._submit("brightness", selected, value)
 
     def press(self, gesture):
@@ -218,7 +301,18 @@ class Controller:
             else:
                 is_on = any(light.state == "on" for light in available)
             self._submit("off" if is_on else "on", available)
-        elif gesture == "multi_press_2" and self.settings.double_press == "temperature_cycle":
+        elif gesture == "multi_press_2" and self.settings.double_press in ("temperature_cycle", "color_cycle"):
+            all_lights = self.read_lights()
+            if self.settings.double_press == "color_cycle" and any(light.supports_color for light in all_lights):
+                selected = [
+                    light
+                    for light in available
+                    if light.state == "on" and (light.supports_color or "color_temp" in light.modes)
+                ]
+                if selected:
+                    self.palette_index = (self.palette_index + 1) % len(PALETTE)
+                    self._submit("palette", selected, self.palette_index)
+                return
             selected = [light for light in available if light.state == "on" and "color_temp" in light.modes]
             if not selected:
                 return

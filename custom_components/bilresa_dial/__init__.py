@@ -7,6 +7,8 @@ from homeassistant.components.light import LightEntityFeature
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from matter_server.common.models import EventType
 
@@ -39,6 +41,12 @@ def read_lights(hass, entity_ids):
             for member in members:
                 visit(member)
             return
+        entity_entry = er.async_get(hass).async_get(entity)
+        device = (
+            dr.async_get(hass).async_get(entity_entry.device_id) if entity_entry and entity_entry.device_id else None
+        )
+        model = (device.model or "") if device else ""
+        maker = (device.manufacturer or "") if device else ""
         result.append(
             Light(
                 entity_id=entity,
@@ -46,6 +54,9 @@ def read_lights(hass, entity_ids):
                 brightness=attributes.get("brightness"),
                 modes=frozenset(attributes.get("supported_color_modes") or []),
                 kelvin=attributes.get("color_temp_kelvin"),
+                color_mode=attributes.get("color_mode"),
+                hs=tuple(attributes["hs_color"]) if attributes.get("hs_color") is not None else None,
+                white_only="IKEA" in maker and " WS" in model and "CWS" not in model,
                 minimum_kelvin=attributes.get("min_color_temp_kelvin") or 2000,
                 maximum_kelvin=attributes.get("max_color_temp_kelvin") or 6500,
                 transition_supported=bool(attributes.get("supported_features", 0) & LightEntityFeature.TRANSITION),

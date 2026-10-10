@@ -5,6 +5,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from test_decoder import event
 
 from custom_components.bilresa_dial import async_setup_entry, async_unload_entry, read_lights
@@ -58,6 +59,7 @@ async def hass(tmp_path):
     instance.config_entries = ConfigEntries(instance, {})
     instance.data[dr.DATA_REGISTRY] = dr.DeviceRegistry(instance)
     await dr.async_load(instance, load_empty=True)
+    await er.async_load(instance)
     yield instance
     for task in list(instance._background_tasks):
         task.cancel()
@@ -122,9 +124,12 @@ async def test_no_remote_and_options_change(hass):
     flow = OptionsFlow()
     flow.hass, flow.handler, flow.flow_id = hass, configured.entry_id, "options"
     form = await flow.async_step_init()
-    values = form["data_schema"]({"lights": ["light.new"], "reverse_direction": True})
+    values = form["data_schema"](
+        {"lights": ["light.new"], "reverse_direction": True, "temperature_follows_brightness": True}
+    )
     result = await flow.async_step_init(values)
     assert result["data"]["lights"] == ["light.new"] and result["data"]["reverse_direction"] is True
+    assert result["data"]["temperature_follows_brightness"] is True
 
 
 async def test_group_expansion_deduplication_and_capabilities(hass):
@@ -273,3 +278,51 @@ async def test_subscription_failure_leaves_no_output_owner_and_can_retry(hass, m
     assert await async_setup_entry(hass, configured)
     assert len(client.callbacks) == 1
     await async_unload_entry(hass, configured)
+
+
+async def test_raw_scroll_sends_brightness_and_temperature_in_one_service_call(hass):
+    parent = add_parent(hass)
+    configured = entry(
+        DOMAIN,
+        {"matter_entry_id": parent.entry_id, "node_id": 73, "group": 1},
+        validate_options({"lights": ["light.a"], "temperature_follows_brightness": True}),
+    )
+    hass.states.async_set(
+        "light.a",
+        "on",
+        {
+            "brightness": 121,
+            "supported_color_modes": ["color_temp"],
+            "min_color_temp_kelvin": 2000,
+            "max_color_temp_kelvin": 6000,
+        },
+    )
+    calls = []
+    hass.services.async_register("light", "turn_on", lambda call: calls.append(dict(call.data)))
+    assert await async_setup_entry(hass, configured)
+    configured.runtime_data.receive(None, event(1, 1))
+    await configured.runtime_data.controller.outputs.wait_idle()
+    assert calls == [{"entity_id": "light.a", "brightness": 129, "color_temp_kelvin": 4000}]
+    await async_unload_entry(hass, configured)
+
+
+async def test_read_lights_distinguishes_ikea_white_xy_from_color_bulbs(hass, monkeypatch):
+    devices = {
+        "white": SimpleNamespace(manufacturer="IKEA of Sweden", model="KAJPLATS E27 WS"),
+        "color": SimpleNamespace(manufacturer="IKEA of Sweden", model="KAJPLATS E27 CWS"),
+    }
+    monkeypatch.setattr(dr, "async_get", lambda _: SimpleNamespace(async_get=devices.get))
+    monkeypatch.setattr(
+        er,
+        "async_get",
+        lambda _: SimpleNamespace(async_get=lambda entity: SimpleNamespace(device_id=entity.split(".")[1])),
+    )
+    for suffix in devices:
+        hass.states.async_set(
+            "light." + suffix,
+            "on",
+            {"supported_color_modes": ["color_temp", "xy"], "color_mode": "xy", "hs_color": [180, 100]},
+        )
+    states = {item.entity_id: item for item in read_lights(hass, ["light.white", "light.color"])}
+    assert states["light.color"].supports_color and states["light.color"].colored
+    assert not states["light.white"].supports_color and not states["light.white"].colored

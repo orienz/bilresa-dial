@@ -23,13 +23,17 @@ For updates, install the new version through HACS and restart HA. Manual install
 
 | Control | Default | Settings |
 |---|---|---|
-| Wheel | Change brightness by 3% per step | Direction, step size, limits, fade |
+| Wheel | Change brightness by 3% per step | Direction, step size, limits, fade, white temperature |
 | Single press | Toggle selected lights | Enable or disable |
-| Double press | Cycle white temperature | Enable or disable, presets, fade |
+| Double press | Cycle white temperature | White presets or eight colors and white, fade |
 
 Scrolling normally adjusts only lit bulbs. Turning up from darkness starts them gently; turning down leaves them off. Both choices are configurable. Brightness stops at 1% and 100%, with no fade. Selected bulbs receive the same level, so relative brightness differences are not preserved.
 
-Temperature presets are **2202, 2400, 2700, 3200, and 4500 K**, with a **0.7-second fade**. Cycling affects lit bulbs with white-temperature support. Values are limited to each bulb's range, so out-of-range presets may look the same. Fades require transition support. On/off-only lights support toggling.
+Enable **Adjust color warmth with brightness** to make white light warmer when dimmed and cooler when brightened, up to the chosen Kelvin limit. Colored lights keep their saturation and shift hue gently within the same color family. This hue shift is a visual warmth effect, not a Kelvin setting for saturated color. The option is off by default.
+
+Choose **Cycle eight colors and white** for red, orange, yellow, white (3200 K), green, cyan, blue, violet, and magenta. White uses native temperature control where available; RGB/XY-only bulbs emulate it. White-only bulbs use a complementary white within their supported range. IKEA WS models that advertise XY are still treated as white-only. Only lit lights change; the presence of any configured color bulb enables the palette. Without one, the dial cycles white presets instead. Palette order starts again after an integration reload.
+
+White presets default to **2202, 2400, 2700, 3200, and 4500 K**, with a **0.7-second fade**. The original white-only cycle remains available as a separate double-press option. Fades require transition support. On/off-only lights support toggling.
 
 A double acts on its second click. A third click adds nothing; holds have no assigned action. The group button stays local to the remote.
 
