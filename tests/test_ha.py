@@ -306,10 +306,10 @@ async def test_raw_scroll_sends_brightness_and_temperature_in_one_service_call(h
     await async_unload_entry(hass, configured)
 
 
-async def test_read_lights_distinguishes_ikea_white_xy_from_color_bulbs(hass, monkeypatch):
+async def test_read_lights_distinguishes_white_spectrum_xy_from_color_bulbs(hass, monkeypatch):
     devices = {
-        "white": SimpleNamespace(manufacturer="IKEA of Sweden", model="KAJPLATS E27 WS"),
-        "color": SimpleNamespace(manufacturer="IKEA of Sweden", model="KAJPLATS E27 CWS"),
+        "white": SimpleNamespace(model="Example E27 WS"),
+        "color": SimpleNamespace(model="Example E27 CWS"),
     }
     monkeypatch.setattr(dr, "async_get", lambda _: SimpleNamespace(async_get=devices.get))
     monkeypatch.setattr(

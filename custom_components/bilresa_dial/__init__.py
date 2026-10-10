@@ -46,7 +46,6 @@ def read_lights(hass, entity_ids):
             dr.async_get(hass).async_get(entity_entry.device_id) if entity_entry and entity_entry.device_id else None
         )
         model = (device.model or "") if device else ""
-        maker = (device.manufacturer or "") if device else ""
         result.append(
             Light(
                 entity_id=entity,
@@ -56,7 +55,7 @@ def read_lights(hass, entity_ids):
                 kelvin=attributes.get("color_temp_kelvin"),
                 color_mode=attributes.get("color_mode"),
                 hs=tuple(attributes["hs_color"]) if attributes.get("hs_color") is not None else None,
-                white_only="IKEA" in maker and " WS" in model and "CWS" not in model,
+                white_only="WS" in model.upper().split() and "CWS" not in model.upper().split(),
                 minimum_kelvin=attributes.get("min_color_temp_kelvin") or 2000,
                 maximum_kelvin=attributes.get("max_color_temp_kelvin") or 6500,
                 transition_supported=bool(attributes.get("supported_features", 0) & LightEntityFeature.TRANSITION),

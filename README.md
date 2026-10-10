@@ -1,6 +1,6 @@
 # BILRESA Dial
 
-Control Home Assistant lights with an IKEA BILRESA rotary remote. Choose lights for each of its three groups, then set scrolling and press behavior in HA.
+Control Home Assistant lights with a BILRESA rotary remote. Choose lights for each of its three groups, then set scrolling and press behavior in HA.
 
 Requires **Home Assistant 2026.9.3+**, its **Matter integration**, and a working Thread network. The remote must be paired with HA. This is an early release; changes to HA's internal Matter API may require an update.
 
@@ -31,7 +31,7 @@ Scrolling normally adjusts only lit bulbs. Turning up from darkness starts them 
 
 Enable **Adjust color warmth with brightness** to make white light warmer when dimmed and cooler when brightened, up to the chosen Kelvin limit. Colored lights keep their saturation and shift hue gently within the same color family. This hue shift is a visual warmth effect, not a Kelvin setting for saturated color. The option is off by default.
 
-Choose **Cycle eight colors and white** for red, orange, yellow, white (3200 K), green, cyan, blue, violet, and magenta. White uses native temperature control where available; RGB/XY-only bulbs emulate it. White-only bulbs use a complementary white within their supported range. IKEA WS models that advertise XY are still treated as white-only. Only lit lights change; the presence of any configured color bulb enables the palette. Without one, the dial cycles white presets instead. Palette order starts again after an integration reload.
+Choose **Cycle eight colors and white** for red, orange, yellow, white (3200 K), green, cyan, blue, violet, and magenta. White uses native temperature control where available; RGB/XY-only bulbs emulate it. White-only bulbs use a complementary white within their supported range. White-spectrum (WS) models that advertise XY are still treated as white-only. Only lit lights change; the presence of any configured color bulb enables the palette. Without one, the dial cycles white presets instead. Palette order starts again after an integration reload.
 
 White presets default to **2202, 2400, 2700, 3200, and 4500 K**, with a **0.7-second fade**. The original white-only cycle remains available as a separate double-press option. Fades require transition support. On/off-only lights support toggling.
 
